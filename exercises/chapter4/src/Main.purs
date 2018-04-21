@@ -4,11 +4,11 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, logShow)
 import Control.MonadZero (guard)
-import Data.Array (concatMap, filter, foldl, last, null, (:))
+import Data.Array (filter, last, null, (:))
 import Data.Array.Partial (head, tail)
-import Data.Foldable (for_, foldl)
-import Data.Maybe
-import Partial.Unsafe
+import Data.Foldable (foldl, for_)
+import Data.Maybe (Maybe)
+import Partial.Unsafe (unsafePartial)
 
 import Data.Path (Path, filename, isDirectory, ls, root, size)
 import FileOperations (allFiles)
@@ -59,7 +59,7 @@ whereIs :: String -> Maybe Path
 whereIs name = last $ unsafePartial tail $ whereIs' name root
   where
     whereIs' :: String -> Path -> Array Path
-    whereIs' name file = file : do
+    whereIs' nom file = file : do
       child <- ls file
-      guard $ isChild name child
-      whereIs' name child
+      guard $ isChild nom child
+      whereIs' nom child
