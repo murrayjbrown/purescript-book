@@ -4,7 +4,7 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, logShow)
 import Control.MonadZero (guard)
-import Data.Array (concatMap, filter, foldl, (:))
+import Data.Array (concatMap, filter, foldl, last, null, (:))
 import Data.Array.Partial (head, tail)
 import Data.Foldable (for_, foldl)
 import Data.Maybe
@@ -48,3 +48,18 @@ largestFile = filename $ minOrMaxFile isLarger $ root
 
 smallestFile :: String
 smallestFile = filename $ minOrMaxFile isSmaller $ root
+
+inFiles :: String -> Array Path -> Boolean
+inFiles name files = not null $ filter (\fn -> filename fn == name) $ files
+
+isChild :: String -> Path -> Boolean
+isChild name dir = inFiles name $ ls dir
+
+whereIs :: String -> Maybe Path
+whereIs name = last $ unsafePartial tail $ whereIs' name root
+  where
+    whereIs' :: String -> Path -> Array Path
+    whereIs' name file = file : do
+      child <- ls file
+      guard $ isChild name child
+      whereIs' name child
