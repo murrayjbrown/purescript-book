@@ -129,6 +129,7 @@ shapeText _ = Nothing
 text1 :: Shape
 text1 = Text (Point {x: 1.0, y: 2.0}) "Text1"
 
+
 {-
 Compute area of shape.
 -}
@@ -146,6 +147,7 @@ square1 :: Shape
 square1 = Rectangle (Point {x: 1.0, y: 1.0}) 1.0 1.0
 square1Area = area square1
 
+
 {-
 Extend Shape with Clipped contructor
 which clips another Picture to a rectangle.
@@ -155,10 +157,10 @@ data Shape'
   | Clipped Shape' Shape
 
 shapeBounds' :: Shape' -> Bounds
-shapeBounds' (Rectangle' p w h)
-  = shapeBounds (Rectangle p w h)
-shapeBounds' (Clipped clipboard shape)
-  = union (shapeBounds' clipboard) (shapeBounds shape)
+shapeBounds' (Rectangle' c w h)
+  = shapeBounds (Rectangle c w h)
+shapeBounds' (Clipped board shape)
+  = union (shapeBounds' board) (shapeBounds shape)
 
 clipboard1 :: Shape'
 clipboard1 = Rectangle' (Point {x: 3.0, y: 3.0}) 2.0 2.0
@@ -167,3 +169,38 @@ clippedCircle1 :: Shape'
 clippedCircle1 = Clipped clipboard1 circle1
 
 clippedCircle1Bounds = shapeBounds' clippedCircle1
+
+
+{-
+Addendum per Chapter 6: Use the showShape function
+to define a Show instance for the Shape type.
+-- Note:  Unable to directly extend Shape type defined
+          defined in another module, so redefined here
+          as Shape'' and extended w/ Shape'.
+-}
+
+data Shape''
+  = Circle'' Point Number
+  | Rectangle'' Point Number Number
+  | Line'' Point Point
+  | Text'' Point String
+  | Clipped'' Shape' Shape
+
+instance showShape' :: Show Shape'' where
+  show (Rectangle'' c w h)
+    = showShape (Rectangle c w h)
+  show (Circle'' c r)
+    = showShape (Circle c r)
+  show (Line'' p0 p1)
+    = showShape (Line p0 p1)
+  show (Text'' c t)
+    = showShape (Text c t)
+  show (Clipped'' (Rectangle' c w h) shape)
+    = showShape shape <> " CLIPPED ONTO " <> showShape (Rectangle c w h)
+  show _ = "Huh?"
+
+circle2 :: Shape''
+circle2 = Circle'' (Point {x: 1.0, y: 1.0}) 1.0
+
+clippedCircle2 :: Shape''
+clippedCircle2 = Clipped'' clipboard1 circle1
