@@ -1,15 +1,19 @@
 module Main where
 
 import Prelude
-import Data.Array
+import Data.Array (length, sort)
+import Data.Array.Partial (last)
+import Data.Either
 import Data.Eq
 import Data.Foldable
+import Data.Maybe
 import Data.Ordering
 import Data.Hashable
 import Data.Monoid
 import Data.Semigroup
 import Data.Show
-import Math
+import Partial.Unsafe (unsafePartial)
+
 
 -- Complex data
 newtype Complex = Complex
@@ -163,3 +167,34 @@ instance showOneMore :: (Foldable f, Show a) =>
     show :: OneMore f a -> String
     show (OneMore o (m)) =
       (show o) <> ":" <> foldMap (\x -> show x <> ".") m
+
+
+{-
+Exercise: Partial function returning maximum of a non-empty array of integers.
+-}
+maxNonEmptyIntArray :: Array Int -> Int
+maxNonEmptyIntArray xs = if (unsafePartial length xs > 0)
+  then  unsafePartial fromJust (unsafePartial maximum xs)
+  else 0
+
+
+{-
+Exercise: repeatAction instance.
+-}
+
+class Monoid m <= Action m a where
+   act :: m -> a -> a
+
+newtype Multiply = Multiply Int
+
+instance semigroupMultiply :: Semigroup Multiply where
+  append (Multiply n) (Multiply m) = Multiply (n * m)
+
+instance monoidMultiply :: Monoid Multiply where
+  mempty = Multiply 1
+
+instance repeatAction :: Action Multiply String
+  where
+    act (Multiply 0) s = ""
+    act (Multiply 1) s = s
+    act (Multiply n) s = s <> act (Multiply (n - 1)) s
