@@ -183,9 +183,12 @@ Exercise: repeatAction instance.
 -}
 
 class Monoid m <= Action m a where
-   act :: m -> a -> a
+  act :: m -> a -> a
 
 newtype Multiply = Multiply Int
+
+instance showMultiply :: Show Multiply where
+  show (Multiply x) = "(Multiply " <> show x <> ")"
 
 instance semigroupMultiply :: Semigroup Multiply where
   append (Multiply n) (Multiply m) = Multiply (n * m)
@@ -193,8 +196,64 @@ instance semigroupMultiply :: Semigroup Multiply where
 instance monoidMultiply :: Monoid Multiply where
   mempty = Multiply 1
 
-instance repeatAction :: Action Multiply String
+instance repeatAction :: Action Multiply String where
+  act (Multiply 0) s = ""
+  act (Multiply 1) s = s
+  act (Multiply n) s = s <> act (Multiply (n - 1)) s
+
+-- tests
+m0 = Multiply 0
+m1 = Multiply 1
+m2 = Multiply 2
+rs0 = act m0 "a"
+rs1 = act m1 "a"
+rs2 = act m2 "a"
+rs2' = act (Multiply 2) "a"
+
+{-
+Exercise: Define instance of Action m a => Action m (Array a),
+where the action on arrays is defined by acting on each
+array element independently.
+-}
+
+instance actOnEach :: (Monoid m, Action m a) =>
+  Action m (Array a)
   where
-    act (Multiply 0) s = ""
-    act (Multiply 1) s = s
-    act (Multiply n) s = s <> act (Multiply (n - 1)) s
+    act x y = map (act x) y
+
+-- tests
+re0 = act m0 ["a","b","c"]
+re1 = act m1 ["a","b","c"]
+re2 = act m2 ["a","b","c"]
+re2' = act (Multiply 2) ["a","b","c"]
+
+{-
+Exercise: Define instance for Action m (Self m),
+where the monoid m acts on itself using append.
+-}
+
+newtype Self m = Self m
+
+instance showSelf :: Show m =>
+  Show (Self m)
+  where
+    show (Self x) = "(Self " <> show x <> ")"
+
+instance appendSelf :: (Monoid m) =>
+  Action m (Self m)
+  where
+    act x (Self y) = Self (x <> y)
+
+-- tests
+sm0 = Self m0
+sm1 = Self m1
+sm2 = Self m2
+as00 = act m0 sm0
+as01 = act m0 sm1
+as02 = act m0 sm2
+as10 = act m1 sm0
+as11 = act m1 sm1
+as12 = act m1 sm2
+as20 = act m2 sm0
+as21 = act m2 sm1
+as22 = act m2 sm2
